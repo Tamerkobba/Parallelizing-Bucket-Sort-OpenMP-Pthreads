@@ -5,7 +5,8 @@
 
 #define N 100000
 #define M 10
-#define K 2
+#define K 128
+#define RUNS 10 
 
 int arr[N];
 int buckets[M][N] = {0};
@@ -23,77 +24,84 @@ void* insert_into_bucket(void* arg);
 void* sort_buckets(void* arg);
 
 int main() {
-    srand(time(NULL));
-    for (int i = 0; i < N; i++) {
-        arr[i] = rand() % 100;
-    }
+    double total_time_used = 0.0; 
 
-    pthread_t threads[K];
-    thread_data t_data[K];
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
+    for (int run = 0; run < RUNS; run++) { 
+        srand(42 + run); 
+        for (int i = 0; i < N; i++) {
+            arr[i] = rand() % 100;
+        }
 
-    clock_t start, end;
-    double cpu_time_used;
+        
+        for (int i = 0; i < M; i++) {
+            bucket_counts[i] = 0;
+        }
 
-    start = clock();
+        pthread_t threads[K];
+        thread_data t_data[K];
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
 
-    
-    for (int i = 0; i < M; i++) {
-        pthread_mutex_init(&lock[i], NULL);
-    }
+        clock_t start, end;
 
-    for (int i = 0; i < K; i++) {
-        t_data[i].start = i * (N / K);
-        t_data[i].end = (i + 1) * (N / K) - 1;
-        if (i == K - 1) t_data[i].end = N - 1; 
-        t_data[i].thread_id = i;
+        start = clock();
 
-        pthread_create(&threads[i], &attr, insert_into_bucket, (void*)&t_data[i]);
-    }
+        
+        for (int i = 0; i < M; i++) {
+            pthread_mutex_init(&lock[i], NULL);
+        }
 
-    
-    for (int i = 0; i < K; i++) {
-        pthread_join(threads[i], NULL);
-    }
+        
+        for (int i = 0; i < K; i++) {
+            t_data[i].start = i * (N / K);
+            t_data[i].end = (i + 1) * (N / K) - 1;
+            if (i == K - 1) t_data[i].end = N - 1; 
+            t_data[i].thread_id = i;
 
-    
-    for (int i = 0; i < K; i++) {
-        t_data[i].start = i * (M / K);
-        t_data[i].end = (i + 1) * (M / K) - 1;
-        if (i == K - 1) t_data[i].end = M - 1; 
+            pthread_create(&threads[i], &attr, insert_into_bucket, (void*)&t_data[i]);
+        }
 
-        pthread_create(&threads[i], &attr, sort_buckets, (void*)&t_data[i]);
-    }
+        
+        for (int i = 0; i < K; i++) {
+            pthread_join(threads[i], NULL);
+        }
 
-    
-    for (int i = 0; i < K; i++) {
-        pthread_join(threads[i], NULL);
-    }
+        
+        for (int i = 0; i < K; i++) {
+            t_data[i].start = i * (M / K);
+            t_data[i].end = (i + 1) * (M / K) - 1;
+            if (i == K - 1) t_data[i].end = M - 1; 
 
-    
-    int index = 0;
-    for (int i = 0; i < M; i++) {
-        for (int j = 0; j < bucket_counts[i]; j++) {
-            arr[index++] = buckets[i][j];
+            pthread_create(&threads[i], &attr, sort_buckets, (void*)&t_data[i]);
+        }
+
+        
+        for (int i = 0; i < K; i++) {
+            pthread_join(threads[i], NULL);
+        }
+
+        
+        int index = 0;
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < bucket_counts[i]; j++) {
+                arr[index++] = buckets[i][j];
+            }
+        }
+
+        end = clock();
+
+        double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        total_time_used += cpu_time_used;
+
+        
+        for (int i = 0; i < M; i++) {
+            pthread_mutex_destroy(&lock[i]);
         }
     }
-
-    end = clock();
-      
-    
-        
-    
-    
-
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Time taken: %f seconds\n", cpu_time_used);
-
-    
-    for (int i = 0; i < M; i++) {
-        pthread_mutex_destroy(&lock[i]);
-    }
  
+    double average_time = total_time_used / RUNS;
+    printf("Average time taken: %f seconds\n", average_time);
+
     return 0;
 }
 

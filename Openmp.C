@@ -5,31 +5,42 @@
 
 #define N 100000
 #define M 10
-#define K 2
-
-
-
+#define K 128
 void bucket_sort_parallel(int arr[], int n);
 void insert_into_bucket(int arr[], int start, int end, int buckets[][N], int bucket_counts[], int range);
 void sort_buckets(int buckets[][N], int bucket_counts[], int start, int end);
 
 int main() {
     int arr[N];
-
-    
+     clock_t start, end;
+    double total_cpu_time_used = 0.0;
+ for (int iter = 0; iter < 10; iter++) {
+  srand(42);
     for (int i = 0; i < N; i++) {
         arr[i] = rand() % 100; 
     }
- clock_t start, end;
-    double cpu_time_used;
 
-    start = clock();
-    
-    bucket_sort_parallel(arr, N);
-    end = clock();
+   
 
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-printf("Time taken: %f seconds\n", cpu_time_used);
+   
+        start = clock();
+        bucket_sort_parallel(arr, N);
+        end = clock();
+
+        double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        total_cpu_time_used += cpu_time_used;
+
+        
+        
+             
+         
+         
+
+        printf("Iteration %d: Time taken: %f seconds\n", iter+1, cpu_time_used);
+    }
+
+    printf("Average running time over 10 iterations: %f seconds\n", total_cpu_time_used / 10);
+
     return 0;
 }
 
