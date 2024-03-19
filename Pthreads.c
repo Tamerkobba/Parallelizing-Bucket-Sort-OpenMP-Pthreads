@@ -38,41 +38,40 @@ int main() {
 
     start = clock();
 
-    // Initialize mutexes
+    
     for (int i = 0; i < M; i++) {
         pthread_mutex_init(&lock[i], NULL);
     }
 
-    // Creating threads for inserting into buckets
     for (int i = 0; i < K; i++) {
         t_data[i].start = i * (N / K);
         t_data[i].end = (i + 1) * (N / K) - 1;
-        if (i == K - 1) t_data[i].end = N - 1; // Last thread may take more
+        if (i == K - 1) t_data[i].end = N - 1; 
         t_data[i].thread_id = i;
 
         pthread_create(&threads[i], &attr, insert_into_bucket, (void*)&t_data[i]);
     }
 
-    // Joining threads after insertion
+    
     for (int i = 0; i < K; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    // Creating threads for sorting buckets
+    
     for (int i = 0; i < K; i++) {
         t_data[i].start = i * (M / K);
         t_data[i].end = (i + 1) * (M / K) - 1;
-        if (i == K - 1) t_data[i].end = M - 1; // Last thread may take more
+        if (i == K - 1) t_data[i].end = M - 1; 
 
         pthread_create(&threads[i], &attr, sort_buckets, (void*)&t_data[i]);
     }
 
-    // Joining threads after sorting
+    
     for (int i = 0; i < K; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    // Merge sorted buckets
+    
     int index = 0;
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < bucket_counts[i]; j++) {
@@ -81,16 +80,16 @@ int main() {
     }
 
     end = clock();
-      // Print sorted array
-    //for (int i = 0; i < N; i++) {
-        //printf("%d ", arr[i]);
-    //}
-    //printf("\n");
+      
+    
+        
+    
+    
 
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n", cpu_time_used);
 
-    // Destroy mutexes
+    
     for (int i = 0; i < M; i++) {
         pthread_mutex_destroy(&lock[i]);
     }
@@ -120,7 +119,7 @@ void* sort_buckets(void* arg) {
 
     for (int i = start; i <= end; i++) {
         if (bucket_counts[i] > 0) {
-            // Insertion sort
+            
             for (int j = 1; j < bucket_counts[i]; j++) {
                 int key = buckets[i][j];
                 int k = j - 1;
